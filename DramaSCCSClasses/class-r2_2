@@ -1,0 +1,16 @@
+# @(#) $Id: ACMM:2dFdelta/DramaSCCSClasses/class-r2_2,v 3.0 10-Mar-2003 11:22:30+11 tjf $
+#Class r2_2 created by tjf at Wed Nov 1 08:42:11 EST 2000
+#New FPIL based delta with check against 2dF removed 
+# 
+acmmFileCopy 2dFdelta dmakefile -r2.25
+acmmFileCopy 2dFdelta tdFdelta.c -r2.8
+acmmFileCopy 2dFdelta tdFdelta.h -r2.7
+acmmFileCopy 2dFdelta tdFdelCmdFile.c -r2.4
+acmmFileCopy 2dFdelta tdFdelConvert.c -r2.7
+acmmFileCopy 2dFdelta tdFdelCrosses.c -r2.1
+acmmFileCopy 2dFdelta tdFdelFieldCh.c -r2.16
+acmmFileCopy 2dFdelta tdFdelMain.c -r2.2
+acmmFileCopy 2dFdelta tdFdelSeq.c -r2.13
+acmmFileCopy 2dFdelta tdFdelUtil.c -r2.1
+acmmFileCopy 2dFdelta tdFdelta_Err.msg -r2.1
+acmmFileCopy 2dFdelta tdFdelVersion.c -r1.1

@@ -1,0 +1,161 @@
+/*		d m a k e f i l e
+ * File:
+  	dmakefile
+ * Function:
+  	Drama makefile source for tdFdelta sub system
+  
+ * Description:
+  	The program dmkmf should be run in the directory containing this
+  	file to generate a Makefile or descrip.mms file for the desired
+  	target
+
+	The following version options (to dmkmf) are support
+		-v 6df_only -> Support 6dF but not 2dF
+		-v 2df_only -> Support 2dF but not 6dF
+
+ * Author: Tony Farrell
+ 
+ * History:
+ 	08-Jul-1993 - TJF - Original version.
+        01-Nov-1993 - JW  - Changed for tdFdelta.
+        01-Jul-1994 - JW  - Removed TDFPT/TDFDELTA common code and replaced it with
+                            TDFUTIL functions.
+        29-Oct-1996 - KS  - Moved to version r1_1. (Fixed bug causing
+                            unnecessary parks, particularly on tweaks).
+	14-Apr-1997 - TJF - Shortern module names to avoid truncation
+			when loaded into libraries.
+        28-OCt-1997 - TJF - Goto version r1_1_1.  Add DramaReleaseCheck target
+	02-Mar-1998 - TJF - Goto version r1_1_2
+        10-Jun-1998 - TJF - Add tdFdeltaVersion.c
+        28-Jan-2000 - TJF - Creating new 2dF/6dF version using FPIL.  Goto
+	                    version r2_0. 
+	24-Feb-2000 - TJF - Tidy up 2dF/6dF selection and support use of
+	                    dmkmf -v option to select version.
+        01-Nov-2000 - TJF - Ability to check FPIL against old tdFcollision
+                            routines removed.
+
+
+ * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.0 10-Mar-2003 11:22:31+11 tjf $ (mm/dd/yy)
+ */
+ 
+#BeginConfig 
+
+
+/*
+ *  There are a number of possible values to the -v option to dmkmf which
+ *  effect how we build this program.
+ *
+ *	-v 6df_only ->       Support 6dF but not 2dF.  Results in Imake macro
+ *                           Version_6df_only being set.
+ *	-v 2df_only ->       Support 2dF but not 6dF.  Results in Imake macro
+ *                           Version_2df_only being set.
+ *
+ *  By default, both 6dF and 2dF are supported.
+ */
+
+/*
+ * Default includes and libs for both 6dF and 2dF.
+ */
+VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(TDFPMAC_DIR) IDir(SIXDF_UTIL_DIR)
+VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util) \
+	          LinkLibDir(SIXDF_UTIL_LIB,sixdf_util) 
+
+#ifdef Version_6df_only
+DEFINES=-DNO_TWO_DF
+VERSION_INCLUDES = IDir(SIXDF_UTIL_DIR)
+VERSION_LIBS =    LinkLibDir(SIXDF_UTIL_LIB,sixdf_util) 
+#endif
+
+#ifdef Version_2df_only
+DEFINES=-DNO_SIX_DF
+VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(TDFPMAC_DIR)
+VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util)
+#endif
+
+RELEASE=r2_4_5
+SYSTEM=tdFdelta			/* System name (for release)	*/
+INCLUDES=DramaIncl IDir(FPIL_DIR) $(VERSION_INCLUDES)
+USERCCOPTIONS = AnsiCFull()	/* Enable Full Ansi C		*/
+
+#EndConfig
+
+NormalCRules()			/* Include normal c rules	*/
+
+/*
+ *  Objects for tdFdelta
+ */
+OBJECTS = tdFdelta.o \
+tdFdelUtil.o \
+tdFdelConvert.o tdFdelCrosses.o tdFdelCmdFile.o \
+tdFdelFieldCh.o tdFdelSeq.o tdFdelSeqSp.o tdFdel_$(RELEASE).o
+
+/*
+ *    The list of object libraries and extra objects.
+ */
+LIBS=LinkLib(tdFdelta) $(VERSION_LIBS) LinkLibDir(FPIL_LIB,fpil) 
+
+/*
+ *	Sources for makedepend.
+ */
+SRC1 = tdFdelta.c tdFdelMain.c \
+tdFdelUtil.c \
+tdFdelConvert.c tdFdelCrosses.c tdFdelCmdFile.c \
+tdFdelFieldCh.c tdFdelSeq.c tdFdelSeqSp.c
+
+/*
+ * The target All will build the dits library, ticker and tocker and ditscmd
+ *	On embedded systems, we also to libdits.o
+ */
+DummyTarget(All, checktarget includes tdFdelta)
+
+DramaCheckTarget()
+
+
+
+/*
+ * We use an includes target for include files which need to be built.  This
+ * is only realy necessary if makedepnds has not been run.
+ */
+DummyTarget(includes, tdFdelta_Err.h tdFdelta_Err_msgt.h tdFdelta.h )
+
+/*
+ * Now the normal programs
+ */
+ErrorIncludeFiles(tdFdelta_Err)
+
+/*
+ * The tdFdelta object library
+ */
+ObjectLibraryTarget(tdFdelta, $(OBJECTS),)
+
+/*
+ *  Special Make specific code to create a version and date setting file.
+ */
+tdFdel_$(RELEASE).o : tdFdelVersion.c
+	@ echo Compiling tdFdelVersion to $@
+	$(CC) -c $(CFLAGS) StringDefine(TDFDELTA_VER,$(RELEASE)) -DTDFDELTA_DATE=$(DATE_CMD) tdFdelVersion.c
+	mv tdFdelVersion.o $@
+
+
+/*
+ * The tdFdelta program
+ */
+DramaProgramTarget(tdFdelta, Obj(tdFdelMain), Lib(tdFdelta), $(LIBS),)
+
+/*
+ * Release targets
+ */
+release :: includes
+
+DramaReleaseCheck()
+
+DramaReleaseCommon(tdFdelta_Err.h tdFdelta_Err_msgt.h tdFdelta.h )
+DramaReleaseTarget(UnixOnly(tdFdelta),,,)
+DramaReleaseDramaStart()
+
+/*
+ * Target to enable tdFdelta.
+ */
+DramaEnable()
+DramaDirs()
+

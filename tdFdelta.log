@@ -1,0 +1,10 @@
+                     t d F d e l t a    l o g
+                     ----------------------
+
+22nd Nov 1996 (TJF)
+------------------
+
+First log entry. 
+
+tdFgripFieldCheck.c:Was incorrectly checking for out of use fiducials in the
+last SHOW operation of the fiducial checks.  Error in message only.
