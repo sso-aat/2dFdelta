@@ -35,7 +35,7 @@
                             routines removed.
 
 
- * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.1 10-Mar-2003 12:08:38+11 tjf $ (mm/dd/yy)
+ * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.2 12-Mar-2003 08:22:24+11 tjf $ (mm/dd/yy)
  */
  
 #BeginConfig 
@@ -72,7 +72,7 @@ VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(TDFPMAC_DIR)
 VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util)
 #endif
 
-ACMM_RELEASE=3_1$(ACMMBUILDVER)
+ACMM_RELEASE=3_2$(ACMMBUILDVER)
 RELEASE=r$(ACMM_RELEASE)
 SYSTEM=tdFdelta			/* System name (for release)	*/
 INCLUDES=DramaIncl IDir(FPIL_DIR) $(VERSION_INCLUDES)
@@ -151,7 +151,7 @@ release :: includes
 DramaReleaseCheck()
 
 DramaReleaseCommon(tdFdelta_Err.h tdFdelta_Err_msgt.h tdFdelta.h )
-DramaReleaseTarget(UnixOnly(tdFdelta),,,)
+NoEmbedded(DramaReleaseTarget(tdFdelta,,,))
 DramaReleaseDramaStart()
 
 /*
