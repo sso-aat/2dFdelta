@@ -26,10 +26,14 @@
                         required.
       01-Nov-2000  TJF  Remove ability to check FPIL against old
                         tdFcollision routines.
+      09-Apr-2003  TJF  Invesitage and fix double park problem.  Several changes
+                        and lots of debugging added.
+                        Drop   tdFdelta___DirectField().  Note needed.
+                         
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.2 12-Mar-2003 08:22:24+11 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.3 09-Apr-2003 21:11:06+10 tjf $
  */
 
 /*
@@ -37,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.2 12-Mar-2003 08:22:24+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.3 09-Apr-2003 21:11:06+10 tjf $";
 static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
 
 
@@ -74,145 +78,292 @@ static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
 #define SCALE      0.25   /* Used when calculating the DELTA_CONFIG parameter value..  */
                           /* ..in an attempt to make progress v time linear            */
 
+
+/*#define DEBUG_DELTA*/
+
+static void checkMoveOk(
+    const unsigned      piv,
+    const tdFinterim    * const iField,
+    const tdFcrosses    * const iCrosses,
+    StatusType          * const status)
+{
+    if (*status != STATUS__OK) return;
+    if (iField->nAbove[piv] != 0)
+    {
+        *status = TDFDELTA__CROSSESERR;
+        ErsRep(0, status, "Last chance cross check triggered");
+        ErsRep(0, status, "Attempt to move fibre %d when crossed %d times", 
+               piv+1, iField->nAbove[piv]);
+        if (iCrosses->above[piv])
+            ErsRep(0, status, "First crossing fibre = %d",
+                   iCrosses->above[piv]->piv+1);
+        else
+            ErsRep(0, status, "Inconsist cross list");
+    }
+}
+
 
 /*
  *  Internal Function, name:
-      tdFdelta___DirectField
+      tdFdelta___CheckFibresUnder
 
  *  Description:
-      Produces a command file that moves all specified fibres to their target
-      positions WITHOUT performing any checks.
+      This is invoked if we think we can do a direct move of a fibre from
+      its current position to its new positions.
 
  *  History:
-      01-Jul-1994  JW   Original version
-      28-Jul-1998  TJF  data->offsets renamed to data->offsets_ and items
-                        renamed.  Support different offsets for from park
-                        moves.
-      10-Aug-1998  TJF  We no longer put offsets in the command file.
-      01-Feb-2000  TJF  Instead of using NUM_PIVOTS macro, use the new
-                        variable numPivots, which is initialised to the
-                        value returned by FpilGetNumPivots().
-      20-Oct-2000  TJF  Pass the above item when creating command file
-                        and then free it if on return.
-
+      09-Apr-2003 TJF   Original version
       {@change entry@}
  */
-TDFDELTA_PRIVATE void  tdFdelta___DirectField (
-        StatusType  *status)
+
+#ifdef DEBUG_DELTA
+/*
+ * Debugging function to print cross over lists.
+ */
+static void PrintCrosses(
+    const unsigned    piv,
+    const tdFinterim  * const cur,
+    const tdFcrosses  * const crosses,
+    StatusType        * const status)
 {
-    tdFdeltaType  *data = DitsGetActData(); /* Function parameters                   */
-    SdsIdType     cmdFileId = 0;            /* Command file Id (Sds structure id)    */
-    float         progress;                 /* Percentage of field completed         */
-    static float  lastUpdate;               /* DELTA_PROG at last update             */
-    unsigned      pivotsToMove = 0,         /* Number of pivots left to move         */
-                  pivotsMoved = 0,          /* Number of pivots moved to target pos. */
-                  i, lineNumber = 1,        /* Counters                              */
-                  numMoved = 0,
-                  numParked = 0;
-
-    unsigned      numPivots;                /* Number of pivots     */
-
     if (*status != STATUS__OK) return;
+    if (cur->nBelow[piv] > 0)
+    {
+        fprintf(stderr, " Fibre %d crosses %.2d fibres, being ", 
+                piv+1, cur->nBelow[piv]);
+        
+        if (crosses->below[piv])
+        {
+            FibreCross *ptmp = crosses->below[piv];
+            while (ptmp)
+            {
+                fprintf(stderr, "%.3d ", ptmp->piv);
+                ptmp = ptmp->next;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "[INVALID CROSS LIST]");
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Fibre %d cross no fibres", piv+1);
+    }
+    fprintf(stderr, "\n");
+
+}
+#endif
+
+/*
+ * CheckUnder - does the actual check using the correct cross over
+ * list.
+ */
+static int CheckUnder(
+    const unsigned    piv,            /* Index of pivot to check */
+    const tdFinterim  * const cur,
+    const tdFtarget   * const tField,
+    const tdFcrosses  * const crosses,
+    StatusType        * const status)
+{
+    if (*status != STATUS__OK) return 0;
+
+    /*
+     * Now - the cross over lists are appropiate.  What we want to do is
+     * try to work out if we will ever have to move "piv" - this may be
+     * required if any fibre underneath has (mustMove[otherPiv] == YES) or
+     * any fibre under those etc.  
+     */
+
+    if (cur->nBelow[piv])
+    {
+        FibreCross *ptmp = crosses->below[piv];
+        /*
+         * Look at the fibres under us, if any must move, then it trigger
+         * us to get out, returning the number.
+         */
+        while (ptmp)
+        {
+            unsigned p = ptmp->piv;
+            if (tField->mustMove[p-1] == YES)
+                return p;
+            ptmp = ptmp->next;
+        }
+        /*
+         * Go through again, this time, recurisvely check each fibre
+         * under us.
+         */
+        ptmp = crosses->below[piv];
+        while (ptmp)
+        {
+            unsigned p = ptmp->piv;
+            int result;
+            result = CheckUnder(p-1, cur, tField, crosses, status);
+            if (result)
+                return result;
+            ptmp = ptmp->next;
+        }
+    }
+    return 0;
+    
+
+    
+}
+
+TDFDELTA_PRIVATE int  tdFdelta___CheckFibresUnder (
+    const int           parkMayCollide,
+    tdFinterim          * const iField,  /*Changed but returned to orig state*/
+    tdFcrosses          * const iCrosses,/*Changed but returned to orig state*/
+    const tdFtarget     * const tField,
+    const tdFconstants  * const con,
+    const unsigned      piv,             /* Index if pivot to check under */
+    StatusType          * const status)
+{
+    register unsigned pIndex;
+    unsigned numPivots;
+    FibreCross *ptmp;
+    int result = 0;
+    /*
+     * We need to generate the cross over lists which would apply after
+     * piv is moved to its target field position.  Whilst ideally we should
+     * do this by generating an enitrely new list, the is far quicker to
+     * do it by changing the existing list and then resetting it back to
+     * the way it was.
+     */
+
+
+    if (*status != STATUS__OK) return 0;
+
+#ifdef DEBUG_DELTA
+    fprintf(stderr, "Interim Field Crosses:");
+    PrintCrosses(piv, iField, iCrosses, status);            
+#endif
 
     /*
      *  Get the number of pivots in this instrument
      */
     numPivots = FpilGetNumPivots(tdFdeltaFpilInst());
 
-    /*
-     *  Open a new command file.
+    /* 
+     * We can only have crosses below at this point - otherwise we
+     * wouldn't get to this point 
+     *
+     * Delete any crosses below
      */
-    cmdFileId = tdFdeltaCFnew (data->name,&data->current,&data->above,status);
-    /*
-     * Error opening command file.
-     */
-    if (*status != STATUS__OK) {
-        ErsRep(0,status,"Error opening new command file - %s",DitsErrorText(*status));
-        if (data->above)
-        {
-            StatusType ignore = STATUS__OK;
-            SdsDelete(data->above, &ignore);
-            SdsFreeId(data->above, &ignore);
-            data->above = 0;
-        }
-        free((void *)data);
-        return;
+    ptmp = iCrosses->below[piv];
+    while (ptmp) {
+        tdFdeltaDeleteCross(piv+1,
+                            &iCrosses->above[(ptmp->piv)-1],
+                            status);
+        iField->nAbove[(ptmp->piv)-1]--;
+        tdFdeltaDeleteCross(ptmp->piv,
+                            &ptmp,
+                            status);
     }
-
     /*
-     *  Set necessary parameters/variables.
+     * Now are ready to set up the new list -> again, we can only have
+     * crosses below at this point.
      */
-    lastUpdate = progress = 0.0;
-    SdpPutf("DELTA_PROG",progress,status);
+    iCrosses->below[piv] = NULL;
+    iField->nBelow[piv] = 0;
+    for (pIndex=0; pIndex < numPivots; pIndex++) {
+        int flag;
+        if (piv == pIndex) continue;
+        if ((iField->park[pIndex] == YES)&&(!parkMayCollide)) continue;
 
-    /*
-     *  Determine the number of pivots to be moved.
-     */
-    for (i=0; i < numPivots; i++)
-        if (data->target.mustMove[i] == YES)
-            pivotsToMove++;
+        flag = FpilColFibFib (tdFdeltaFpilInst(),
+                              (double)con->xPiv[piv],
+                              (double)con->yPiv[piv],
+                              (double)tField->fvpX[piv],/* Use target rather */
+                              (double)tField->fvpY[piv],/* then existing pos */
+                              (double)con->xPiv[pIndex],
+                              (double)con->yPiv[pIndex],
+                              (double)iField->fvpX[pIndex],
+                              (double)iField->fvpY[pIndex]);
 
-    /*
-     *  Sequentially move all fibres directly to their target positions.
-     */
-    for (i=0; i < numPivots; i++)
 
         /*
-         *  If pivot needs to be moved - record move and report it.
-         */
-        if (data->target.mustMove[i] == YES) {
-
-            /*
-             *  Add move to command file. 
-             */
-            if (data->target.park[i] == YES) { /* To park - from plate */
-                tdFdeltaCFaddCmd (status,
-                                  cmdFileId,lineNumber++,
-                                  "PF",i+1);
-                numParked++;
-            } else {    
-                tdFdeltaCFaddCmd (status,  
-                                  cmdFileId,lineNumber++,
-                                  "MF",i+1,
-                                  data->target.xf[i],
-                                  data->target.yf[i],
-                                  data->target.theta[i]);
-                numMoved++;
-            }
-            pivotsMoved++;
-
-            /*
-             *  Update the DELTA_PROG parameter.
-             */
-            progress = 100.0*(float)pivotsMoved/(float)pivotsToMove;
-            if ((lastUpdate - progress > RESOLUTION) ||
-                (progress - lastUpdate > RESOLUTION) ||
-                (progress == 100.0)) {
-                lastUpdate = progress;
-                SdpPutf("DELTA_PROG",progress,status);
-                if (*status != STATUS__OK) {
-                    ErsRep(0,status,"Error recording move - %s",DitsErrorText(*status));
-                    SdsDelete (cmdFileId,status);
-                    SdsFreeId (cmdFileId,status);
-                    free((void *)data);
-                    return;
-                }
-            }
+         * A cross occurs -> add it.
+         */ 
+        if (flag == YES) {
+            tdFdeltaAddCross(pIndex+1,&iCrosses->below[piv],status);
+            tdFdeltaAddCross(piv+1,&iCrosses->above[pIndex],status);
+            iField->nAbove[pIndex]++;
+            iField->nBelow[piv]++;
         }
-
+    }
+#ifdef DEBUG_DELTA
+    fprintf(stderr, "After Move Field Crosses:");
+    PrintCrosses(piv, iField, iCrosses, status);            
+#endif
     /*
-     *  Record the number of moves and parks in the command file.
+     * We only have an issue if we have any fibres crossing below piv at
+     * this point.
      */
-    tdFdeltaCFaddMoves (cmdFileId,(long int)numMoved,(long int)numParked,status);
-
+    if (iField->nBelow[piv])
+    {
+        result = CheckUnder(piv, iField, tField, iCrosses, status);
+#ifdef DEBUG_DELTA
+        fprintf(stderr, "Check under says that %d may move\n", result);
+#endif
+    }
     /*
-     *  Command file generated - report and return.
+     * * * *  Restore actual current cross over list * * * *
+     *
+     * 
+     * Once again, we can only have crosses below at this point - delete them.
      */
-    MsgOut(status,"Command file generated - %s (%d move(s), %d park(s))",
-           data->name,numMoved,numParked);
-    DitsPutArgument(cmdFileId,DITS_ARG_DELETE,status);
-    free((void *)data);
+    ptmp = iCrosses->below[piv];
+    while (ptmp) {
+        tdFdeltaDeleteCross(piv+1,
+                            &iCrosses->above[(ptmp->piv)-1],
+                            status);
+        iField->nAbove[(ptmp->piv)-1]--;
+        tdFdeltaDeleteCross(ptmp->piv,
+                            &ptmp,
+                            status);
+    }
+    /*
+     * Now are ready to set up the new list -> again, we can only have
+     * crosses below at this point.
+     */
+    iCrosses->below[piv] = NULL;
+    iField->nBelow[piv] = 0;
+    for (pIndex=0; pIndex < numPivots; pIndex++) {
+        int flag;
+        if (piv == pIndex) continue;
+        if ((iField->park[pIndex] == YES)&&(!parkMayCollide)) continue;
+
+        flag = FpilColFibFib (tdFdeltaFpilInst(),
+                              (double)con->xPiv[piv],
+                              (double)con->yPiv[piv],
+                              (double)iField->fvpX[piv],
+                              (double)iField->fvpY[piv],
+                              (double)con->xPiv[pIndex],
+                              (double)con->yPiv[pIndex],
+                              (double)iField->fvpX[pIndex],
+                              (double)iField->fvpY[pIndex]);
+
+
+        /*
+         * A cross occurs -> add it.
+         */ 
+        if (flag == YES) {
+            tdFdeltaAddCross(pIndex+1,&iCrosses->below[piv],status);
+            tdFdeltaAddCross(piv+1,&iCrosses->above[pIndex],status);
+            iField->nAbove[pIndex]++;
+            iField->nBelow[piv]++;
+        }
+    }
+#ifdef DEBUG_DELTA
+    fprintf(stderr, "Restored Field Crosses:");
+    PrintCrosses(piv, iField, iCrosses, status);            
+#endif
+
+
+    return result;
 }
+
 
 
 /*
@@ -270,21 +421,23 @@ TDFDELTA_PRIVATE void  tdFdelta___DirectField (
       20-Dec-2000  TJF  Use xf/yf instead of xb/yb in FpilColButBut call and
                         second FpilColButFib call.
       07-May-2002  TJF  Ensure that were status is set, fibre details are output.
-   
+      09-Apr-2003  TJF  Invesitage and fix double park problem - must ensure
+                         that we don't direct move a fibre which, in the resulting
+                         position, is crossing a fibre we will later want to move.
 
       {@change entry@}
  */
 TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
-        tdFinterim    *iField,
-        tdFcrosses    *iCrosses,
-        tdFtarget     *tField,
-        tdFconstants  *con,
-        long int      butClearG,
-        long int      butClearO,
-        long int      fibClearG,
-        long int      fibClearO,
-        int           piv,
-        StatusType    *status)
+    tdFinterim          * const iField,/*Changed but returned to orig state*/
+    tdFcrosses          * const iCrosses,/*Changed but returned to orig state*/
+    const tdFtarget     * const tField,
+    const tdFconstants  * const con,
+    const long int      butClearG,
+    const long int      butClearO,
+    const long int      fibClearG,
+    const long int      fibClearO,
+    const int           piv,
+    StatusType          * const status)
 {
     double    pivotDist,                /* Dist between 2 pivot points      */
               graspXt, graspYt;         /* X and Y rotated grasp values,
@@ -359,7 +512,7 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
 
         /*
          *  These checks are not necessary if a button does not have to be
-         *  moved.
+         *  moved
          */
         if (tField->mustMove[otherPiv] == NO) continue;
 
@@ -452,11 +605,18 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
             if (flag > 0) return (otherPiv+1);
         }
     }
-
     /*
-     *  If reached this far it is OK to move pivot directly - return 0.
+     * If we cross other fibres (after moving), then it is required that 
+     * none of the other fibres or ones they cross or ones they cross etc
+     * needs to be moved.  Otherwise we have to park this one anyway.
+     *
+     * This returns the pivot in question or 0 which indicates it is ok
+     * to move directly.
      */
-    return (0);
+    return (tdFdelta___CheckFibresUnder(ParkMayCollide,
+                                        iField, iCrosses, tField, 
+                                        con, piv, status));
+    
 }
 
 
@@ -478,7 +638,9 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
                         mallocing a fibre cross.  Remove the malloc
                         and move the declartion of ptmp to where
                         it is used.
-
+      09-Apr-2003  TJF  Invesitage and fix double park problem - increment
+                         numUnParkedNotMovedLeft when we change a fibre from
+                         no move to must move.
       {@change entry@}
  */
 TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
@@ -487,6 +649,7 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
         tdFtarget   *tField,
         int         *pivotsLeft,
         short       numMovesPrevented[FPIL_MAXPIVOTS],
+        short       *numUnParkedNotMovedLeft,
         StatusType  *status)
 {
     int         candidate = 0;
@@ -494,6 +657,11 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
     short       listReset = YES,
                 altNumMovesPrevented[FPIL_MAXPIVOTS];
     unsigned    numPivots;
+
+#ifdef DEBUG_DELTA
+    fprintf(stderr, "ChoosePark: 193 prevents %d moves, 190 %d\n", 
+            numMovesPrevented[192],  numMovesPrevented[189]);
+#endif
 
     if (*status != STATUS__OK) return 0;
 
@@ -507,8 +675,9 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
      *  Initialise altNumMovesPrevented.
      */
     for (j=0; j < numPivots; j++)
+    {
         altNumMovesPrevented[j] = 0;
-
+    }
     /*
      *  Loop until either a parkable fibre is found, or an error occurs.
      */
@@ -545,6 +714,13 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
                 FibreCross  *ptmp;
                 ptmp = iCrosses->above[candidate];
                 while (ptmp) {
+#ifdef DEBUG_DELTA
+                    if ((ptmp->piv == 193)||(ptmp->piv == 190))
+                    {
+                        fprintf(stderr,"Fibre %d is on fibre %d cross list\n",
+                                ptmp->piv, candidate+1);
+                    }
+#endif
                     altNumMovesPrevented[ptmp->piv-1]++;
                     ptmp = ptmp->next;
                 }
@@ -559,8 +735,16 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
              *    numMovesPrevented[candidate] != 0.
              */
             if (numMovesPrevented[candidate] > 0)
+            {
+#ifdef DEBUG_DELTA
+                if ((candidate == 189)||(candidate == 192))
+                    fprintf(stderr,
+                        "Selecting %d to park, prevents %d fibres moving\n",
+                            candidate+1, numMovesPrevented[candidate]);
+#endif
                 return (candidate+1);   /* piv# = array index + 1 */
-        } else {
+            }
+        } else  /* numMovesPrevented[candidate] <= 0 */{
 	    /*
 	     * If no candidate was found, and this is the first time through or
 	     * the list was reset on the last attempt, so is an error
@@ -569,20 +753,48 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
                 *status = TDFDELTA__DELTAPARKERR;
                 return 0;
             } else {
+
+#ifdef DEBUG_DELTA
+                fprintf(stderr,
+                        "Triggering reset of numMovesPrevented array\n");
+                fprintf(stderr, "ChoosePark:AltList: 193 prevents %d moves\n", 
+                        altNumMovesPrevented[192]);
+                fprintf(stderr, "ChoosePark:AltList: 190 prevents %d moves\n", 
+                        altNumMovesPrevented[190]);
+#endif               
+ 
                 /*
-                 * No candidate was found so reset the numMovesPrevented array
+                 * If a fibre is preventing others from moving, then
+                 * park it.
                  */
-                for (j=0; j < numPivots; j++) {
-                    if (numMovesPrevented[j] != 0) {
-                        if (tField->mustMove[j] == NO) {
+                for (j=0; j < numPivots; j++) 
+                {
+                    if (numMovesPrevented[j] != 0) 
+                    {
+#ifdef DEBUG_DELTA
+                        if ((j == 189)||(j == 192))
+                            fprintf(stderr,
+                                "Fibre %d preventing %d(%d) moves, park it\n",
+                                j+1, altNumMovesPrevented[j],
+                                numMovesPrevented[j]);
+#endif
+                        if (tField->mustMove[j] == NO) 
+                        {
                             tField->mustMove[j] = YES;
                             *pivotsLeft += 1;
+                            (*numUnParkedNotMovedLeft)++;
                         }
                     }
                     numMovesPrevented[j] = altNumMovesPrevented[j];
                     altNumMovesPrevented[j] = 0;
-                    listReset = YES;
                 }
+#ifdef DEBUG_DELTA
+                fprintf(stderr, "ChoosePark:NewList: 193 prevents %d moves\n", 
+                        numMovesPrevented[192]);
+                fprintf(stderr, "ChoosePark:NewList: 190 prevents %d moves\n", 
+                        numMovesPrevented[189]);
+#endif
+                listReset = YES;
             }
         }
     }
@@ -655,6 +867,9 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
                         has been seen.  Modify CouldNotMove_MustPark() to
                         report more details and prompt the user to use
                         the 2dfsave command to send the details to tjf.
+      09-Apr-2003  TJF  Invesitage and fix double park problem.  Several changes
+                        and lots of debugging added.
+                        Drop NO_ORDER_CHECK flag (now just an error return);
       {@change entry@}
  */
 
@@ -704,12 +919,19 @@ static void CanMoveDirect(
     short               * const numUnParkedNotMovedLeft,
     int                 * const pivotsMoved,
     float               * const lastUpdate,
+    short               alreadyParked[],
+    short               alreadyMoved[],
     StatusType          * const status)
 {
     double cosT,sinT;
     unsigned j;
     FibreCross *ptmp;
     int ParkMayCollide;
+
+    /*
+     * Last chance check
+     */
+    checkMoveOk(curPivot, current, crosses, status);
 
     if (*status != STATUS__OK) return;
 
@@ -727,8 +949,21 @@ static void CanMoveDirect(
      *  Update numUnParkedNotMovedLeft.
      */
     if (current->park[curPivot] == NO)
-        (*numUnParkedNotMovedLeft)--;
+    {
+#ifdef DEBUG_DELTA
+        if ((curPivot == 189)||(curPivot == 192))
+            fprintf(stderr,"CanMoveDirect:Decrementing UPNM, for fibre %d\n", curPivot+1);
+#endif
 
+        (*numUnParkedNotMovedLeft)--;
+    }
+#ifdef DEBUG_DELTA
+    else
+    {
+        if ((curPivot == 189)||(curPivot == 192))
+            fprintf(stderr,"CanMoveDirect:moving parked fibre %d\n", curPivot+1);
+    }
+#endif
     /*
      *  Update interim field details.
      */
@@ -811,11 +1046,50 @@ static void CanMoveDirect(
      *  Add move to command file.
      */
     if (target->park[curPivot] == YES) {    /* To park */
+#ifdef DEBUG_DELTA
+        /*if ((curPivot == 189)||(curPivot == 192))*/
+        fprintf(stderr,"Park fibre %d (1)\n", curPivot+1);
+#endif
+        if (alreadyParked[curPivot])
+        {
+            *status = TDFDELTA__DELTAERR;
+            ErsRep(0,status,
+                   "Error generating command file - attempted to park fibre %d 2 times",
+               curPivot+1);
+            ErsRep(0, status, "within:CanMoveDirect");
+            ErsRep(0, status, "Please use the \"2dfsave\" command from the terminal window to send details of this error to support");
+            ErsRep(0, status, 
+                   "To get going again, first try parking fibres %d through %d (from engineering interface).", 
+                   curPivot-20, curPivot+20);
+            ErsRep(0, status, "Then try field again.");
+            return;
+            
+        }
+        ++alreadyParked[curPivot];
         tdFdeltaCFaddCmd (status,
                           cmdFileId,(*lineNumber)++,
                           "PF",curPivot+1);
         (*numParks)++;
     } else {                             /* From plate */
+#ifdef DEBUG_DELTA
+        /*if ((curPivot == 189)||(curPivot == 192))*/
+            fprintf(stderr,"Move fibre %d\n", curPivot+1);
+#endif
+        if (alreadyMoved[curPivot])
+        {
+            *status = TDFDELTA__DELTAERR;
+            ErsRep(0,status,
+                   "Error generating command file - attempted to move fibre %d 2 times",
+               curPivot+1);
+            ErsRep(0, status, "Please use the \"2dfsave\" command from the terminal window to send details of this error to support");
+            ErsRep(0, status, 
+                   "To get going again, first try parking fibres %d through %d (from engineering interface).", 
+                   curPivot-20, curPivot+20);
+            ErsRep(0, status, "Then try field again.");
+            return;
+            
+        }
+        ++alreadyMoved[curPivot];
         tdFdeltaCFaddCmd (status,
                           cmdFileId,(*lineNumber)++,
                           "MF",curPivot+1,
@@ -854,9 +1128,16 @@ static void CanPark_RecordMoveUpdate(
     unsigned            * const numParks,
     short               * const numUnParkedNotMovedLeft,
     short               alreadyParked[],
+    short               * const extraParks,
     StatusType          * const status)
 {
     FibreCross *ptmp;
+
+    /*
+     * Last chance check
+     */
+    checkMoveOk(parkFibre, current, crosses, status);
+
 
     if (*status != STATUS__OK) return;
     /*
@@ -864,12 +1145,40 @@ static void CanPark_RecordMoveUpdate(
      */
     if (target->mustMove[parkFibre] == NO) {
         target->mustMove[parkFibre] = YES;
+        
         (*pivotsLeft)++;
+#ifdef DELTA_DEBUG
+        if ((parkFibre == 189)||(parkFibre == 192))
+            fprintf(stderr,
+              "CanPark_Record:Fibre %s which should not moved to be parked\n", 
+                parkFibre+1);
+#endif
+        ++(*extraParks);
+        
     } else if (target->mustMove[parkFibre] == IF_NEEDED) {
         target->mustMove[parkFibre] = NO;
-    } else
+#ifdef DELTA_DEBUG
+        if ((parkFibre == 189)||(parkFibre == 192))
+            fprintf(stderr,
+             "CanPark_Record:Fibre %d which is move if needed to be parked\n", 
+                parkFibre+1);
+#endif
+        ++(*extraParks);
+    } else {
+#ifdef DEBUG_DELTA
+        if ((parkFibre == 189)||(parkFibre == 192))
+            fprintf(stderr,"CanPark_Record:Decrementing UPNM, for fibre %d\n", 
+                    parkFibre+1);
+#endif
         (*numUnParkedNotMovedLeft)--;
+    }
     (*didMove) = YES;
+#ifdef DEBUG_DELTA
+    if ((parkFibre == 189)||(parkFibre == 192))
+        fprintf(stderr,
+                "CanPark_Record:Incrementing alreadyParked for fibre %d\n", 
+                parkFibre+1);
+#endif
     ++alreadyParked[parkFibre];
     current->theta[parkFibre]       = constants->tPark[parkFibre];
     current->fibreLength[parkFibre] = 0;
@@ -900,6 +1209,10 @@ static void CanPark_RecordMoveUpdate(
     /*
      *  Add park to command file.
      */
+#ifdef DEBUG_DELTA
+    /*if ((parkFibre == 189)||(parkFibre == 192))*/
+        fprintf(stderr,"Park fibre %d (2)\n", parkFibre+1);
+#endif
     tdFdeltaCFaddCmd (status,
                       cmdFileId,(*lineNumber)++,
                       "PF",parkFibre+1);
@@ -926,6 +1239,7 @@ static void CouldNotMove_MustPark(
     float               * const lastUpdate,
     short               alreadyParked[],
     short               numMovesPrevented[],
+    short               * const extraParks,
     StatusType          * const status)
 {
     short parkFibre;
@@ -939,13 +1253,23 @@ static void CouldNotMove_MustPark(
                                             target,
                                             pivotsLeft,
                                             numMovesPrevented,
+                                            numUnParkedNotMovedLeft,
                                             status);
+
+#ifdef DEBUG_DELTA
+    if ((parkFibre == 189)||(parkFibre == 192))
+        fprintf(stderr,"Chose to park pivot %d\n", parkFibre);
+#endif
+
     parkFibre--;  /* array index = piv#-1 */
     if (*status != STATUS__OK) {
         ErsRep(0,status,"Error choosig fibre to park - %s",
                DitsErrorText(*status));
         return;
     } else if (alreadyParked[parkFibre] > MAX_PARKS) {
+#ifdef DEBUG_DELTA
+        fprintf(stderr,"ERROR, %d already parked\n", parkFibre+1);
+#endif
         *status = TDFDELTA__DELTAERR;
         ErsRep(0,status,
           "Error generating command file - attempted to park fibre %d %d times",
@@ -956,6 +1280,10 @@ static void CouldNotMove_MustPark(
 	       current->nAbove[parkFibre], 
                (crosses->above ? "list exists": "list empty"));
         ErsRep(0, status, "Please use the \"2dfsave\" command from the terminal window to send details of this error to support");
+        ErsRep(0, status, 
+               "To get going again, first try parking fibres %d through %d (from engineering interface).", 
+               parkFibre-20, parkFibre+20);
+        ErsRep(0, status, "Then try field again.");
         return;
     }
 
@@ -975,6 +1303,7 @@ static void CouldNotMove_MustPark(
                                  numParks,
                                  numUnParkedNotMovedLeft,
                                  alreadyParked,
+                                 extraParks,
                                  status);
 
         DisplayProgress(numMoves, *numParks, *pivotsLeft, 
@@ -1004,6 +1333,8 @@ static void SearchForMove(
     short               * const numUnParkedNotMovedLeft,
     float               * const lastUpdate,
     short               numMovesPrevented[],
+    short               alreadyParked[],
+    short               alreadyMoved[],
     StatusType          * const status)
 {
     register unsigned i;
@@ -1024,14 +1355,31 @@ static void SearchForMove(
         /*
          *  Only check fibres that need to be moved.
          */
-        if (data->target.mustMove[i] != YES)  continue;
+        if (data->target.mustMove[i] != YES)  
+        {
+#ifdef DEBUG_DELTA2
+            if ((i == 189)||(i == 192))
+                fprintf(stderr,"fibre %d, mustMove != YES\n", i+1);
+#endif
+            continue;
+        }
 
         /*
          *  Make sure that all fibres that are not in their park positions and
          *  and need to be moved are moved before any fibres in their park
          *  positions are.
          */
-        if ((data->current.park[i] == YES) && ((*numUnParkedNotMovedLeft) > 0)) continue;
+        if ((data->current.park[i] == YES) && 
+            ((*numUnParkedNotMovedLeft) > 0)) 
+        {
+#ifdef DEBUG_DELTA
+            if ((i == 189)||(i == 192))
+                fprintf(stderr,
+                        "fibre %d, park = YES, && numUnParkedNotMoved\n", 
+                        i+1);
+#endif
+            continue;
+        }
 
         /*
          *  If button can be moved directly from current to target position,
@@ -1048,7 +1396,15 @@ static void SearchForMove(
                                                      data->fibClearO,
                                                      i, status);
         if (offendingPivot)
+        {
+#ifdef DEBUG_DELTA
+            if ((i == 189)||(i == 192))
+                fprintf(stderr,"Pivot %d prevents %d being moved (%s)\n", 
+                        offendingPivot, i+1,
+                     (data->current.nAbove[i] > 0 ? "crossed" : "collision" ));
+#endif            
             numMovesPrevented[offendingPivot-1]++;  /* array index = piv#-1 */
+        }
         else if (*status != STATUS__OK) {
             SdsDelete (cmdFileId,status);
             SdsFreeId (cmdFileId,status);
@@ -1060,6 +1416,10 @@ static void SearchForMove(
          *  Can move button directly to target position.
          */
         else {
+#ifdef DEBUG_DELTA
+            if ((i == 189)||(i == 192))
+                fprintf(stderr, "Can move %d directly\n", i+1);
+#endif
             /*
              *  First check that pivot needs to be moved.
 	     *
@@ -1093,6 +1453,8 @@ static void SearchForMove(
                           numUnParkedNotMovedLeft,
                           pivotsMoved,
                           lastUpdate,
+                          alreadyParked,
+                          alreadyMoved,
                           status);
 
             if (*status != STATUS__OK) {
@@ -1120,6 +1482,7 @@ static int SequencerInit(
     short               * const numUnParkedNotMovedLeft,
     short               alreadyParked[],
     short               numMovesPrevented[],
+    short               alreadyMoved[],
     StatusType * const status)
 {
     register unsigned i;
@@ -1151,17 +1514,19 @@ static int SequencerInit(
         MsgOut(status,"Delta (ordering) process NOT performed");
         goto ERROR_RETURN;
     } else if (data->check & NO_ORDER_CHECK) {
-        MsgOut(status,"Delta (ordering) checks NOT performed - %s",
-               "NO_ORDER_CHECK specified");
-        DitsPutHandler(tdFdelta___DirectField,status);
-        DitsPutRequest(DITS_REQ_STAGE,status);
-        return (0);
+        *status = TDFDELTA__INVARG;
+        ErsRep(0, status, "Delta no longer supports NO_ORDER_CHECK flag");
+        goto ERROR_RETURN;
     } else
         MsgOut(status,"Performing delta (ordering) process...");
 
     /*
      *  Open a new command file.
      */
+#ifdef DEBUG_DELTA
+    fprintf(stderr,"\n**************************\n");
+    fprintf(stderr,"Delta starting, command file name %s\n", data->name);
+#endif
     (*cmdFileId) = tdFdeltaCFnew (data->name,&data->current,
                                   &data->above,status);
     /*
@@ -1176,6 +1541,34 @@ static int SequencerInit(
      *  Initialise parameters.
      */
     for (i=0; i < (*numPivots); i++) {
+#ifdef DEBUG_DELTA
+        fprintf(stderr, "Pivot %.3d, mustMove=%s, currentlyParked=%s",
+                i+1,
+                (data->target.mustMove[i] == YES ? "Yes" :
+                    (data->target.mustMove[i] == IF_NEEDED ? "IFN" : "No ")),
+                (data->current.park[i] == YES ? "Yes" : "No "));
+        if (data->current.nAbove[i] > 0)
+        {
+            fprintf(stderr, " crossed by %.2d, being ", 
+                    data->current.nAbove[i]);
+            
+            if (data->crosses.above[i])
+            {
+                FibreCross *ptmp = data->crosses.above[i];
+                while (ptmp)
+                {
+                    fprintf(stderr, "%.3d ", ptmp->piv);
+                    ptmp = ptmp->next;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "INVALID CROSS LIST");
+            }
+        }
+        fprintf(stderr,"\n");
+
+#endif
         if (data->target.mustMove[i] == YES) {
             if (data->current.park[i] == NO)
                 (*numUnParkedNotMovedLeft)++;
@@ -1183,6 +1576,7 @@ static int SequencerInit(
         }
         numMovesPrevented[i] = 0;
         alreadyParked[i] = 0;
+        alreadyMoved[i] = 0;
     }
     return (1);
 
@@ -1216,13 +1610,15 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
     unsigned      lineNumber = 1,   /* Counters                              */
                   numMoves = 0,     /* Final number of pivots to be moved    */
                   numParks = 0;     /* Final number of pivots to be parked   */
+    short         extraParks = 0;  
     /*
      * This array holds for each fibre, the number of times it has
      * prevented another fibre from being moved.
      */
 
     short numMovesPrevented[FPIL_MAXPIVOTS];
- 
+
+    short alreadyMoved[FPIL_MAXPIVOTS];
     short alreadyParked[FPIL_MAXPIVOTS];/*Flag each pivot when parked*/
     short numUnParkedNotMovedLeft = 0; /* Number of un-parked pivots not 
                                           moved  */
@@ -1235,7 +1631,7 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
      */
     if (!SequencerInit(data,&numPivots, &tStart, &lastUpdate, &cmdFileId,
                        &pivotsLeft, &numUnParkedNotMovedLeft, alreadyParked,
-                       numMovesPrevented, status))
+                       numMovesPrevented, alreadyMoved, status))
         return;
 
     /*
@@ -1262,7 +1658,12 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
      */
     while (pivotsLeft) {
 
-
+#ifdef DEBUG_DELTA
+    fprintf(stderr,"\n-------- N e x t    P a s s -----------------\n");
+    fprintf(stderr,"Pivots Left = %d, didMove = %s, UPNM = %d EP = %d\n", 
+            pivotsLeft,
+            (didMove ? "YES" : "NO"), numUnParkedNotMovedLeft, extraParks);
+#endif
         /*
          *  Search for pivot to move directly from current to target position.
          */
@@ -1279,6 +1680,8 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
                           &numUnParkedNotMovedLeft,
                           &lastUpdate,
                           numMovesPrevented,
+                          alreadyParked,
+                          alreadyMoved,
                           status);
             if (*status != STATUS__OK)
                 return;
@@ -1302,6 +1705,7 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
                                   &lastUpdate,
                                   alreadyParked,
                                   numMovesPrevented,
+                                  &extraParks,
                                   status);
             
             if (*status != STATUS__OK) {
@@ -1315,7 +1719,21 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
 
         } /* !didMove */
     } /* while pivotsLeft */
-
+#ifdef DEBUG_DELTA
+    fprintf(stderr,"Delta Complete, moves = %d, parks = %d\n",
+            numMoves, numParks);
+    fprintf(stderr,"=====================================\n");
+    {
+        unsigned i;
+        for (i = 0; i < numPivots ; ++i)
+        {
+            if (alreadyMoved[i] > 1) 
+            {
+                fprintf(stderr,"Fibre %d moved twice\n", i+1);
+            }
+        }       
+    }
+#endif
     /*
      *  Record the number of moves and parks in the command file.
      */
