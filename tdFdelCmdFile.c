@@ -19,7 +19,7 @@
       01-Jul-1994  JW    Original version
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelCmdFile.c,v 3.0 10-Mar-2003 11:22:32+11 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelCmdFile.c,v 3.1 10-Mar-2003 12:08:38+11 tjf $ (mm/dd/yy)
  */
 
 /*
@@ -27,7 +27,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCmdFile.c,v 3.0 10-Mar-2003 11:22:32+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCmdFile.c,v 3.1 10-Mar-2003 12:08:38+11 tjf $";
 static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
 
 
