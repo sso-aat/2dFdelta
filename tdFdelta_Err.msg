@@ -1,4 +1,4 @@
-! "@(#) $Id: ACMM:2dFdelta/tdFdelta_Err.msg,v 3.5 18-Feb-2005 17:31:36+11 tjf $"
+! "@(#) $Id: ACMM:2dFdelta/tdFdelta_Err.msg,v 3.6 23-Mar-2006 11:47:19+11 tjf $"
 .TITLE   TDFDELTA_ERR  2dF Delta Configuration Task
 .FACILITY TDFDELTA,1844/PREFIX=TDFDELTA__
 .SEVERITY ERROR

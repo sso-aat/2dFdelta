@@ -24,10 +24,13 @@
       01-Jul-1994  JW   Original version
       01-Nov-2000  TJF  Remove ability to check FPIL against old
                         tdFcollision routines.
+      23-Mar-2006  TJF  MsgOut messages on fibre collisions etc now
+                         have WARNING prefixed to they are shown in
+                         yellow on 2dF interface.
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.5 18-Feb-2005 17:31:35+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.6 23-Mar-2006 11:47:18+11 tjf $
  */
 
 /*
@@ -35,7 +38,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.5 18-Feb-2005 17:31:35+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.6 23-Mar-2006 11:47:18+11 tjf $";
 static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
 
 
@@ -312,7 +315,7 @@ static void CheckForButButCollisions(
 
             if (flag == YES) {
                 MsgOut(status,
-           "Button/button collision detected in target field (but=%d,%d)",
+           "WARNING:Button/button collision detected in target field (but=%d,%d)",
                        firstPivot+1,otherPivot+1);
                 (*numErrors)++;
             }
@@ -447,7 +450,7 @@ static void CheckForButFibCollisions(
 
             if (flag == YES) {
                 MsgOut(status,
-            "Button/Fibre collision detected in target field (but=%d,fib=%d)",
+            "WARNING:Button/Fibre collision detected in target field (but=%d,fib=%d)",
                        firstPivot+1,otherPivot+1);
                 (*numErrors)++;
             }
@@ -471,7 +474,7 @@ static void CheckForButFibCollisions(
 
             if (flag == YES) {
                 MsgOut(status,
-         "Button/fibre collision detected in target field (but=%d,fib=%d)",
+         "WARNING:Button/fibre collision detected in target field (but=%d,fib=%d)",
                        otherPivot+1,firstPivot+1);
                 (*numErrors)++;
             }
@@ -516,7 +519,7 @@ static void CheckFibreExtension(
          */
         if (target->fibreLength[pivot] > constants->maxExt[pivot]) {
             MsgOut(status,
-                   "Maximum fibre length exceeded (%ld) in target field (piv=%d, proposed length = %ld)",
+                   "WARNING:Maximum fibre length exceeded (%ld) in target field (piv=%d, proposed length = %ld)",
                    constants->maxExt[pivot],
                    pivot+1,
                    (long)target->fibreLength[pivot]);
@@ -659,14 +662,14 @@ static void CheckBendAngles(
         if (FpilGetFibAngVar(inst)) {
             if (thetaButFib > maxButFibAngle) {
                 MsgOut(status,
-           "Out of range %s angle detected in target field (piv=%d,ang=%.3f)",
+           "WARNING:Out of range %s angle detected in target field (piv=%d,ang=%.3f)",
                        "button/fibre",pivot+1,thetaButFib*180/PI);
                 (*numErrors)++;
             }
         }
         if (thetaPivFib > maxPivFibAngle) {
             MsgOut(status,
-            "Out or range %s angle detected in target field (piv=%d,ang=%.3f)",
+            "WARNING:Out or range %s angle detected in target field (piv=%d,ang=%.3f)",
                    "pivot/fibre",pivot+1,thetaPivFib*180/PI);
             (*numErrors)++;
         } 
@@ -714,7 +717,7 @@ static void CheckValidFieldPosition(
                          target->xf[pivot],
                          target->yf[pivot])) {
             MsgOut(status,
-              "Button outside usable field plate area and not parked (piv=%d)",
+              "WARNING:Button outside usable field plate area and not parked (piv=%d)",
                pivot+1);
             (*numErrors)++;
         }
@@ -732,7 +735,7 @@ static void CheckValidFieldPosition(
         
         if (obstructed == YES) {
             MsgOut(status,
-               "Button/screw-hole collision detected in target field (but=%d)",
+               "WARNING:Button/screw-hole collision detected in target field (but=%d)",
                pivot+1);
             (*numErrors)++;
         }
@@ -823,11 +826,11 @@ static void CheckFiducials(
 
     if (numUnObstructed <= 2) {
         if (numUnObstructed == 0) {
-            MsgOut(status, "All fiducials are obstructed in target field");
+            MsgOut(status, "WARNING:All fiducials are obstructed in target field");
             MsgOut(status, "  We must have three unobstructed fiducials");
         } else {
             MsgOut(status,
-      "Target field does not have enough unobstructed fiducials for a survey");
+      "WARNING:Target field does not have enough unobstructed fiducials for a survey");
             MsgOut(status, "  We have %d of the three needed for a survey",
                    numUnObstructed);
         }
@@ -873,7 +876,7 @@ TDFDELTA_INTERNAL void  tdFdeltaFieldCheck (
      *  Bypass checking if requested.
      */
     if (data->check & NO_FIELD_CHECK) {
-        MsgOut(status,"Target field validity checking NOT performed - %s",
+        MsgOut(status,"WARNING:Target field validity checking NOT performed - %s",
                "NO_FIELD_CHECK specified");
         if (data->check & SPECIAL) 
             DitsPutHandler(tdFdeltaSequencerSpecial,status);
@@ -981,9 +984,13 @@ TDFDELTA_INTERNAL void  tdFdeltaFieldCheck (
     } else {
         *status = TDFDELTA__INVFIELD;
         ErsRep(0,status,
-               "Target field configuration is INVALID - %d %s DETECTED",
+               "Target field configuration is INVALID - %d %s DETECTED - see scrolling message area for details.",
                numErrors,
                (numErrors == 1?  "ERROR": "ERRORS"));
+        ErsRep(0,status,
+               "Common causes are - wrong time compared to configuration time (HA) and robot status (tdFconstants400.sds) has changed since fibre allocation");
+        ErsRep(0, status,
+               "Try tweaking for \"proposal date\" (and aborting once it starts).  If that works, then the original configuration time is likely to be wrong compared to the observing (tweak) time.");
     }
 
     /*

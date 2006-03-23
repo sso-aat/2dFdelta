@@ -26,7 +26,7 @@
                         tdFcollision routines.
       {@change entry@}
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelta.c,v 3.5 18-Feb-2005 17:31:36+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelta.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $
  */
 
 /*
@@ -34,7 +34,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelta.c,v 3.5 18-Feb-2005 17:31:36+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelta.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $";
 static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
 
 
