@@ -19,7 +19,7 @@
       30-Jun-1994  JW   Original version
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelUtil.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelUtil.c,v 3.7 19-Jul-2006 14:38:36+10 instswtest $ (mm/dd/yy)
  */
 
 /*
@@ -27,8 +27,8 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelUtil.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $";
-static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelUtil.c,v 3.7 19-Jul-2006 14:38:36+10 instswtest $";
+static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
 #include "DitsTypes.h"       /* Basic dits types            */

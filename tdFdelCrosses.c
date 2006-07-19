@@ -22,7 +22,7 @@
       01-Jul-1994  JW   Original version
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.6 23-Mar-2006 11:47:18+11 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.7 19-Jul-2006 14:38:34+10 instswtest $ (mm/dd/yy)
  */
 
 /*
@@ -30,8 +30,8 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.6 23-Mar-2006 11:47:18+11 tjf $";
-static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.7 19-Jul-2006 14:38:34+10 instswtest $";
+static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
 #include "tdFdelta.h"

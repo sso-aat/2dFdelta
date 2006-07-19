@@ -26,7 +26,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.7 19-Jul-2006 14:38:35+10 instswtest $
 
  */
 
@@ -35,8 +35,8 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.6 23-Mar-2006 11:47:19+11 tjf $";
-static void *use_rcsId = ((void)&use_rcsId,(void *) &rcsId);
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.7 19-Jul-2006 14:38:35+10 instswtest $";
+static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
 #include "DitsTypes.h"       /* Basic dits types            */
