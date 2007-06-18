@@ -33,7 +33,7 @@
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.9 19-Jun-2007 09:36:40+10 tjf $
  */
 
 /*
@@ -41,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.9 19-Jun-2007 09:36:40+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -498,9 +498,6 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
         }
     }
    
-    if (piv == 325) {
-        fprintf(stderr,"My fibre\n");
-    }
 
     /*
      *  Calculate the offsets for this button for the target pos's.
@@ -949,9 +946,6 @@ static void CanMoveDirect(
     FibreCross *ptmp;
     int ParkMayCollide;
 
-    if (curPivot == 325) {
-        fprintf(stderr,"My Fibre\n");
-    }
     /*
      * Last chance check
      */

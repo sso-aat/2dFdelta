@@ -26,7 +26,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.9 19-Jun-2007 09:36:39+10 tjf $
 
  */
 
@@ -35,7 +35,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeqSp.c,v 3.9 19-Jun-2007 09:36:39+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
