@@ -30,7 +30,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.7 19-Jul-2006 14:38:34+10 instswtest $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $
  */
 
 /*
@@ -38,7 +38,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.7 19-Jul-2006 14:38:34+10 instswtest $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -371,7 +371,7 @@ static void CheckForButFibCollisions(
          * 
          * If park positions may collide, check against parked positions.
          *
-         * Otherwise, park position is always save, no need to check it.
+         * Otherwise, park position is always safe, no need to check it.
          */
         
         if (target->park[firstPivot] != YES) {

@@ -39,7 +39,7 @@
       
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelta.h,v 3.7 19-Jul-2006 14:38:36+10 instswtest $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelta.h,v 3.8 19-Jun-2007 09:32:34+10 tjf $ (mm/dd/yy)
  */
 
 #ifndef __TDFDELTA_H__

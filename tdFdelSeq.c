@@ -33,7 +33,7 @@
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.7 19-Jul-2006 14:38:35+10 instswtest $
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $
  */
 
 /*
@@ -41,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.7 19-Jul-2006 14:38:35+10 instswtest $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.8 19-Jun-2007 09:32:34+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -79,7 +79,7 @@ static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
                           /* ..in an attempt to make progress v time linear            */
 
 
-/*#define DEBUG_DELTA*/
+#define DEBUG_DELTA
 
 static void checkMoveOk(
     const unsigned      piv,
@@ -410,6 +410,7 @@ TDFDELTA_PRIVATE int  tdFdelta___CheckFibresUnder (
                         variable numPivots, which is initialised to the
                         value returned by FpilGetNumPivots().
       26-Apr-2000  TJF  In 6dF, a fibre may collide with the park position
+458
                         of another fibre.  We use FpilParkMayCollide() to
                         determine if we are dealing with such an instrument
                         and in these cases, will check against park positions.
@@ -422,8 +423,23 @@ TDFDELTA_PRIVATE int  tdFdelta___CheckFibresUnder (
                         second FpilColButFib call.
       07-May-2002  TJF  Ensure that were status is set, fibre details are output.
       09-Apr-2003  TJF  Invesitage and fix double park problem - must ensure
-                         that we don't direct move a fibre which, in the resulting
-                         position, is crossing a fibre we will later want to move.
+                         that we don't direct move a fibre which, in the 
+                         resulting position, is crossing a fibre we will 
+                         later want to move.
+      19-Jun-2007  TJF  This was the only collision detection code that
+                         was passing the button position rather then the
+                         fibre position to the collission check, by 
+                         subtracting the grasp, but this being done in the
+                         wrong direction - it should have been adding the
+                         grasp to the fibre to get the button position.  This
+                         was not a problem until AAOmega when the grasp offset
+                         became significant (500 microns, so this becomes 
+                         a 1mm mistake).  For the moment, go to using only
+                         the fibre position, since this makes the code
+                         consistent - but it does rely on the collision 
+                         detection having enough clearance to account for
+                         varying grasp offsets (the object fibres are about
+                         500 microns, the guide fibres are closer to zero).
 
       {@change entry@}
  */
@@ -440,7 +456,7 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
     StatusType          * const status)
 {
     double    pivotDist,                /* Dist between 2 pivot points      */
-              graspXt, graspYt;         /* X and Y rotated grasp values,
+              graspXt DUNUSED, graspYt DUNUSED; /* X and Y rotated grasp values,
                                            target      */
     long int  fibreClear, buttonClear;  /* Clearances used during colision 
                                            detection  */
@@ -448,7 +464,7 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
                                            against    */
     int       flag;                     /* Returned value from collision 
                                            functions    */
-    double    cosT,sinT;                /* Sine and Cosine of theta */
+    double    cosT DUNUSED, sinT DUNUSED ;/* Sine and Cosine of theta */
     unsigned  numPivots;                /* Number of pivots */
     int ParkMayCollide;                 /* Can fibres collided with parked 
                                            fibres? */
@@ -481,17 +497,22 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
             return (0);
         }
     }
+   
+    if (piv == 325) {
+        fprintf(stderr,"My fibre\n");
+    }
 
     /*
      *  Calculate the offsets for this button for the target pos's.
      */
+#if 0
     cosT = cos(iField->theta[piv]);
     sinT = sin(iField->theta[piv]);
     graspXt = ((double)con->graspX[piv])*cosT -
               ((double)con->graspY[piv])*sinT;
     graspYt = ((double)con->graspY[piv])*cosT +
               ((double)con->graspX[piv])*sinT;
-
+#endif
     /*
      *  Loop through different checks, return the number of any pivot that is
      *  preventing the current button from being moved.
@@ -538,8 +559,8 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
             FpilSetFibClear(tdFdeltaFpilInst(), fibreClear);
             flag = FpilColButFib (
                                   tdFdeltaFpilInst(),
-                                  (double)tField->xf[piv] - graspXt,
-                                  (double)tField->yf[piv] - graspYt,
+                                  (double)tField->xf[piv] /*- graspXt*/,
+                                  (double)tField->yf[piv] /*- graspYt*/,
                                   tField->theta[piv],
                                   (double)iField->fvpX[otherPiv],
                                   (double)iField->fvpY[otherPiv],
@@ -559,8 +580,8 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
 
             flag = FpilColButBut (
                                   tdFdeltaFpilInst(),
-                                  (double)tField->xf[piv] - graspXt,
-                                  (double)tField->yf[piv] - graspYt,
+                                  (double)tField->xf[piv] /*- graspXt*/,
+                                  (double)tField->yf[piv] /*- graspYt*/,
                                   tField->theta[piv],
                                   (double)iField->xf[otherPiv],
                                   (double)iField->yf[otherPiv],
@@ -928,6 +949,9 @@ static void CanMoveDirect(
     FibreCross *ptmp;
     int ParkMayCollide;
 
+    if (curPivot == 325) {
+        fprintf(stderr,"My Fibre\n");
+    }
     /*
      * Last chance check
      */

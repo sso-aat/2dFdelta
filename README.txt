@@ -1,4 +1,4 @@
-# "@(#) $Id: ACMM:2dFdelta/README.txt,v 3.7 19-Jul-2006 14:38:33+10 instswtest $"
+# "@(#) $Id: ACMM:2dFdelta/README.txt,v 3.8 19-Jun-2007 09:32:33+10 tjf $"
 
 2dF (and 6dF) field configuration delta task.  
 
