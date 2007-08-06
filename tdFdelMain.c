@@ -23,12 +23,12 @@
       31-Jan-2000  TJF  Call FpilFree after DitsMainLoop() has exited.
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelMain.c,v 3.9 19-Jun-2007 09:36:39+10 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelMain.c,v 3.10 06-Aug-2007 11:40:12+10 tjf $ (mm/dd/yy)
  */
 
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelMain.c,v 3.9 19-Jun-2007 09:36:39+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelMain.c,v 3.10 06-Aug-2007 11:40:12+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
