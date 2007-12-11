@@ -33,9 +33,10 @@
 	                    dmkmf -v option to select version.
         01-Nov-2000 - TJF - Ability to check FPIL against old tdFcollision
                             routines removed.
+        11-Dec-2007 - TJF - No longer need to list TDFPMAC_DIR as an include
+                             directory.
 
-
- * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.10 06-Aug-2007 11:40:12+10 tjf $ (mm/dd/yy)
+ * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.11 11-Dec-2007 15:45:26+11 tjf $ (mm/dd/yy)
  */
  
 #BeginConfig 
@@ -56,7 +57,7 @@
 /*
  * Default includes and libs for both 6dF and 2dF.
  */
-VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(TDFPMAC_DIR) IDir(SIXDF_UTIL_DIR)
+VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(SIXDF_UTIL_DIR)
 VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util) \
 	          LinkLibDir(SIXDF_UTIL_LIB,sixdf_util) 
 
@@ -68,11 +69,11 @@ VERSION_LIBS =    LinkLibDir(SIXDF_UTIL_LIB,sixdf_util)
 
 #ifdef Version_2df_only
 DEFINES=-DNO_SIX_DF
-VERSION_INCLUDES = IDir(TDF_UTIL_DIR) IDir(TDFPMAC_DIR)
+VERSION_INCLUDES = IDir(TDF_UTIL_DIR) 
 VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util)
 #endif
 
-ACMM_RELEASE=3_10$(ACMMBUILDVER)
+ACMM_RELEASE=3_11$(ACMMBUILDVER)
 RELEASE=r$(ACMM_RELEASE)
 SYSTEM=tdFdelta			/* System name (for release)	*/
 INCLUDES=DramaIncl IDir(FPIL_DIR) $(VERSION_INCLUDES)
