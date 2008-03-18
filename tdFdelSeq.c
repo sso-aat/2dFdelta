@@ -33,7 +33,7 @@
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.11 11-Dec-2007 15:45:26+11 tjf $
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.12 18-Mar-2008 13:05:04+11 tjf $
  */
 
 /*
@@ -41,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.11 11-Dec-2007 15:45:26+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.12 18-Mar-2008 13:05:04+11 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -890,6 +890,7 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
       09-Apr-2003  TJF  Invesitage and fix double park problem.  Several changes
                         and lots of debugging added.
                         Drop NO_ORDER_CHECK flag (now just an error return);
+      18-Mar-2008  TJF  Fix memory leak due to cross over lists not being cleaned up.
       {@change entry@}
  */
 
@@ -1786,5 +1787,38 @@ TDFDELTA_INTERNAL void  tdFdeltaSequencer (
         SdsFreeId(data->above,&ignore);
         data->above = 0;
     }
+    {
+        unsigned i;
+        for (i = 0; i < numPivots ; ++i)
+        {
+            if (data->crosses.above[i])
+            {
+                FibreCross *p = (data->crosses.above[i]);
+                while (p)
+                {
+                    FibreCross *next = p->next;
+                    free(p);
+                    p = next;
+                }
+                data->crosses.above[i] = 0;
+            }
+
+            if (data->crosses.below[i])
+            {
+                FibreCross *p = (data->crosses.below[i]);
+                while (p)
+                {
+                    FibreCross *next = p->next;
+                    free(p);
+                    p = next;
+                }
+                data->crosses.below[i] = 0;
+            }
+
+        }
+
+    }
+    
+
     free((void *)data);
 }
