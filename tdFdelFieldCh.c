@@ -30,7 +30,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.12 18-Mar-2008 13:05:00+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.13 20-Aug-2009 09:11:26+10 tjf $
  */
 
 /*
@@ -38,7 +38,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.12 18-Mar-2008 13:05:00+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.13 20-Aug-2009 09:11:26+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -190,6 +190,9 @@ static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
       19-Sep-2002 TJF   Insert of using the park theta as the line taken
                         from the fibre to the center of the plate, calculate
                         it - to ensure it is right.  Add FibreAngle function.
+      20-Aug-2009 TJF   Add Fibre Type argument to  FpilColInvPos() call, 
+                         but we don't need provide any real value for 2dF/6dF 
+                         and it is just set to zero.
       {@change entry@}
  */
 
@@ -724,10 +727,11 @@ static void CheckValidFieldPosition(
 
         /*
          *  Check that the button is not on one of the screws.
-         *  WARNING. ASSUMING PLATE IS ZERO. MUST BE FIXED IN LONG TERM
+         *  WARNING. ASSUMING PLATE IS ZERO and Fibre type is ZERO. 
+         *    MUST BE FIXED IN LONG TERM
          *     but does not affect 2dF or 6dF.
          */
-        obstructed = FpilColInvPos(inst, 0,
+        obstructed = FpilColInvPos(inst, 0, 0,
                                    target->xf[pivot],
                                    target->yf[pivot],
                                    target->theta[pivot]);

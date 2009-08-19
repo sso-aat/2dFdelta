@@ -33,7 +33,7 @@
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.12 18-Mar-2008 13:05:04+11 tjf $
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.13 20-Aug-2009 09:11:28+10 tjf $
  */
 
 /*
@@ -41,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.12 18-Mar-2008 13:05:04+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.13 20-Aug-2009 09:11:28+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -891,6 +891,8 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaChoosePark (
                         and lots of debugging added.
                         Drop NO_ORDER_CHECK flag (now just an error return);
       18-Mar-2008  TJF  Fix memory leak due to cross over lists not being cleaned up.
+      20-Aug-2009  TJF  SearchForMove() numMoves argument was signed when
+                          it should have been unsigned.  Fixed.
       {@change entry@}
  */
 
@@ -1246,7 +1248,7 @@ static void CanPark_RecordMoveUpdate(
  *  We could not move a fibre.  We must park one.
  */
 static void CouldNotMove_MustPark(
-    const int           numMoves,
+    const unsigned int  numMoves,
     const SdsIdType     cmdFileId,
     tdFinterim          * const current,
     tdFtarget           * const target,
@@ -1345,7 +1347,7 @@ static void SearchForMove(
     const unsigned      numPivots,
     const SdsIdType     cmdFileId,
     tdFdeltaType        * const data,
-    int                 * const numMoves,
+    unsigned            * const numMoves,
     int                 * const pivotsLeft,
     int                 * const didMove,
     int                 * const pivotsMoved,

@@ -29,7 +29,7 @@
  
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelVersion.c,v 3.12 18-Mar-2008 13:05:03+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelVersion.c,v 3.13 20-Aug-2009 09:11:28+10 tjf $
 
  */
 const char * const tdFdeltaVersion= TDFDELTA_VER;
