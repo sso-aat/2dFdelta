@@ -18,16 +18,18 @@
 
  *  History:
       30-Jun-1994  JW   Original version
+      14-Feb-2013  TJF  Change all uses of SdsFind() to ArgFind(), giving us
+                          better error reporting.
       {@change entry@}
 
- *      @(#) $Id: ACMM:2dFdelta/tdFdelConvert.c,v 3.13 20-Aug-2009 09:11:27+10 tjf $ */
+ *      @(#) $Id: ACMM:2dFdelta/tdFdelConvert.c,v 3.14 22-Feb-2013 08:50:01+11 tjf $ */
 
 /*
  *  Include files
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelConvert.c,v 3.13 20-Aug-2009 09:11:27+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelConvert.c,v 3.14 22-Feb-2013 08:50:01+11 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -190,34 +192,34 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertCurToC (
     /*
      *  Read field details into C structure.
      */
-    SdsFind(curId,"theta",&tmpId,status);
+    ArgFind(curId,"theta",&tmpId,status);
     SdsGet(tmpId,sizeof(double)*numPivots,0,cField->theta,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"fibreLength",&tmpId,status);
+    ArgFind(curId,"fibreLength",&tmpId,status);
     SdsGet(tmpId,sizeof(double)*numPivots,0,cField->fibreLength,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"fvpX",&tmpId,status);
+    ArgFind(curId,"fvpX",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->fvpX,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"fvpY",&tmpId,status);
+    ArgFind(curId,"fvpY",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->fvpY,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"xf",&tmpId,status);
+    ArgFind(curId,"xf",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->xf,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"yf",&tmpId,status);
+    ArgFind(curId,"yf",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->yf,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"xb",&tmpId,status);
+    ArgFind(curId,"xb",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->xb,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"yb",&tmpId,status);
+    ArgFind(curId,"yb",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,cField->yb,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"park",&tmpId,status);
+    ArgFind(curId,"park",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,cField->park,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(curId,"above",&tmpId,status);
+    ArgFind(curId,"above",&tmpId,status);
     SdsInfo(tmpId,name,&code,&ndims,dims,status);
     if ((above = (short *)malloc(sizeof(short)*dims[0])) == NULL) {
         *status = TDFDELTA__MALLOCERR;
@@ -318,32 +320,32 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertConToC (
     /*
      *  Read field details into C structure.
      */
-    SdsFind(conId,"tPark",&tmpId,status);
+    ArgFind(conId,"tPark",&tmpId,status);
     SdsGet(tmpId,sizeof(double)*numPivots,0,con->tPark,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"xPark",&tmpId,status);
+    ArgFind(conId,"xPark",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->xPark,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"yPark",&tmpId,status);
+    ArgFind(conId,"yPark",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->yPark,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"xPiv",&tmpId,status);
+    ArgFind(conId,"xPiv",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->xPiv,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"yPiv",&tmpId,status);
+    ArgFind(conId,"yPiv",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->yPiv,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"type",&tmpId,status);
+    ArgFind(conId,"type",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,con->type,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"inUse",&tmpId,status);
+    ArgFind(conId,"inUse",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,con->inUse,&actlen,status);
     SdsFreeId(tmpId,status);
 
-    SdsFind(conId,"graspX",&tmpId,status);
+    ArgFind(conId,"graspX",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->graspX,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(conId,"graspY",&tmpId,status);
+    ArgFind(conId,"graspY",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,con->graspY,&actlen,status);
     SdsFreeId(tmpId,status);
 
@@ -362,7 +364,7 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertConToC (
         }
     } else {
         MsgOut(status, "Using fibre specific maximum fibre extension");
-        SdsFind(conId,"maxExt",&tmpId,status);
+        ArgFind(conId,"maxExt",&tmpId,status);
         SdsGet(tmpId,sizeof(unsigned long)*numPivots,0,
                con->maxExt,&actlen,status);
         SdsFreeId(tmpId,status);
@@ -440,24 +442,24 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertOffToC (
     /*
      *  Read offset details into C structure.
      */
-    SdsFind(offId,"xOffPL",&tmpId,status);
+    ArgFind(offId,"xOffPL",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->xOffPL,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(offId,"yOffPL",&tmpId,status);
+    ArgFind(offId,"yOffPL",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->yOffPL,&actlen,status);
     SdsFreeId(tmpId,status);
 
-    SdsFind(offId,"xOffFrPK",&tmpId,status);
+    ArgFind(offId,"xOffFrPK",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->xOffFrPK,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(offId,"yOffFrPK",&tmpId,status);
+    ArgFind(offId,"yOffFrPK",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->yOffFrPK,&actlen,status);
     SdsFreeId(tmpId,status);
 
-    SdsFind(offId,"xOffToPK",&tmpId,status);
+    ArgFind(offId,"xOffToPK",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->xOffToPK,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(offId,"yOffToPK",&tmpId,status);
+    ArgFind(offId,"yOffToPK",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,off->yOffToPK,&actlen,status);
     SdsFreeId(tmpId,status);
 
@@ -532,13 +534,13 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertFidToC (
     /*
      *  Read offset details into C structure.
      */
-    SdsFind(fidId,"xf",&tmpId,status);
+    ArgFind(fidId,"xf",&tmpId,status);
     SdsGet(tmpId,bytesINT32,0,fid->fidX,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(fidId,"yf",&tmpId,status);
+    ArgFind(fidId,"yf",&tmpId,status);
     SdsGet(tmpId,bytesINT32,0,fid->fidY,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(fidId,"inUse",&tmpId,status);
+    ArgFind(fidId,"inUse",&tmpId,status);
     SdsGet(tmpId,bytesShort,0,fid->inUse,&actlen,status);
     SdsFreeId(tmpId,status);
 
@@ -613,28 +615,28 @@ TDFDELTA_INTERNAL void  tdFdeltaConvertTarToC (
     /*
      *  Read field details into C structure.
      */
-    SdsFind(tarId,"theta",&tmpId,status);
+    ArgFind(tarId,"theta",&tmpId,status);
     SdsGet(tmpId,sizeof(double)*numPivots,0,tar->theta,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"fibreLength",&tmpId,status);
+    ArgFind(tarId,"fibreLength",&tmpId,status);
     SdsGet(tmpId,sizeof(double)*numPivots,0,tar->fibreLength,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"fvpX",&tmpId,status);
+    ArgFind(tarId,"fvpX",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,tar->fvpX,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"fvpY",&tmpId,status);
+    ArgFind(tarId,"fvpY",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,tar->fvpY,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"xf",&tmpId,status);
+    ArgFind(tarId,"xf",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,tar->xf,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"yf",&tmpId,status);
+    ArgFind(tarId,"yf",&tmpId,status);
     SdsGet(tmpId,sizeof(long int)*numPivots,0,tar->yf,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"mustMove",&tmpId,status);
+    ArgFind(tarId,"mustMove",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,tar->mustMove,&actlen,status);
     SdsFreeId(tmpId,status);
-    SdsFind(tarId,"park",&tmpId,status);
+    ArgFind(tarId,"park",&tmpId,status);
     SdsGet(tmpId,sizeof(short)*numPivots,0,tar->park,&actlen,status);
     SdsFreeId(tmpId,status);
 

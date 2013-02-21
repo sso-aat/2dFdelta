@@ -22,7 +22,7 @@
       01-Jul-1994  JW   Original version
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.13 20-Aug-2009 09:11:27+10 tjf $ (mm/dd/yy)
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.14 22-Feb-2013 08:50:01+11 tjf $ (mm/dd/yy)
  */
 
 /*
@@ -30,7 +30,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.13 20-Aug-2009 09:11:27+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelCrosses.c,v 3.14 22-Feb-2013 08:50:01+11 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
