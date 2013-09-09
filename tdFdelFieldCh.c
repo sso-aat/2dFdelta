@@ -30,7 +30,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.14 22-Feb-2013 08:50:00+11 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.15 10-Sep-2013 08:31:15+10 tjf $
  */
 
 /*
@@ -38,7 +38,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.14 22-Feb-2013 08:50:00+11 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.15 10-Sep-2013 08:31:15+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -193,6 +193,7 @@ static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
       20-Aug-2009 TJF   Add Fibre Type argument to  FpilColInvPos() call, 
                          but we don't need provide any real value for 2dF/6dF 
                          and it is just set to zero.
+      10-Sep-2013 TJF  Robot contants file is now named tdFconstantsDF.sds.
       {@change entry@}
  */
 
@@ -992,7 +993,7 @@ TDFDELTA_INTERNAL void  tdFdeltaFieldCheck (
                numErrors,
                (numErrors == 1?  "ERROR": "ERRORS"));
         ErsRep(0,status,
-               "Common causes are - wrong time compared to configuration time (HA) and robot status (tdFconstants400.sds) has changed since fibre allocation");
+               "Common causes are - wrong time compared to configuration time (HA) and robot status file (tdFconstantsDF.sds) has changed since fibre allocation");
         ErsRep(0, status,
                "Try tweaking for \"proposal date\" (and aborting once it starts).  If that works, then the original configuration time is likely to be wrong compared to the observing (tweak) time.");
     }
