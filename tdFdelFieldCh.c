@@ -30,7 +30,7 @@
       {@change entry@}
 
 
- *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.15 10-Sep-2013 08:31:15+10 tjf $
+ *     @(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.16 25-Sep-2013 17:44:11+10 tjf $
  */
 
 /*
@@ -38,7 +38,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.15 10-Sep-2013 08:31:15+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelFieldCh.c,v 3.16 25-Sep-2013 17:44:11+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -322,6 +322,12 @@ static void CheckForButButCollisions(
            "WARNING:Button/button collision detected in target field (but=%d,%d)",
                        firstPivot+1,otherPivot+1);
                 (*numErrors)++;
+                if (actionFlags & SHOW)
+		    MsgOut(status,
+			   "But %d at %d, %d, %g, But %d at %d, %d, %g",
+			   firstPivot+1, firstPivotX, firstPivotY, firstPivotTheta,
+                           otherPivot+1, otherPivotX, otherPivotY, otherPivotTheta);
+
             }
         }
     } 
@@ -457,6 +463,16 @@ static void CheckForButFibCollisions(
             "WARNING:Button/Fibre collision detected in target field (but=%d,fib=%d)",
                        firstPivot+1,otherPivot+1);
                 (*numErrors)++;
+                if (actionFlags & SHOW)
+		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %ld,%ld to %ld,%ld",
+			   firstPivot+1, 
+ 			   firstPivotX, firstPivotY, firstPivotTheta,
+ 			   otherPivot+1,
+                           target->fvpX[otherPivot],
+                           target->fvpY[otherPivot],
+                           constants->xPiv[otherPivot],
+                           constants->yPiv[otherPivot]);
+
             }
 
             /*
@@ -481,6 +497,15 @@ static void CheckForButFibCollisions(
          "WARNING:Button/fibre collision detected in target field (but=%d,fib=%d)",
                        otherPivot+1,firstPivot+1);
                 (*numErrors)++;
+                if (actionFlags & SHOW)
+		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %ld,%ld to %ld,%ld",
+			   otherPivot+1,
+                           otherPivotX, otherPivotY, otherPivotTheta,
+		           firstPivot+1,
+                           target->fvpX[firstPivot],
+                           target->fvpY[firstPivot],
+                           constants->xPiv[firstPivot],
+                           constants->yPiv[firstPivot]);
             }
         }
     }
