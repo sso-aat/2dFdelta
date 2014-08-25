@@ -36,7 +36,7 @@
         11-Dec-2007 - TJF - No longer need to list TDFPMAC_DIR as an include
                              directory.
 
- * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.16 25-Sep-2013 17:44:11+10 tjf $ (mm/dd/yy)
+ * @(#) $Id: ACMM:2dFdelta/dmakefile,v 3.17 25-Aug-2014 14:38:03+10 tjf $ (mm/dd/yy)
  */
  
 #BeginConfig 
@@ -73,7 +73,7 @@ VERSION_INCLUDES = IDir(TDF_UTIL_DIR)
 VERSION_LIBS =    LinkLibDir(TDF_UTIL_LIB,tdf_util)
 #endif
 
-ACMM_RELEASE=3_16$(ACMMBUILDVER)
+ACMM_RELEASE=3_17$(ACMMBUILDVER)
 RELEASE=r$(ACMM_RELEASE)
 SYSTEM=tdFdelta			/* System name (for release)	*/
 INCLUDES=DramaIncl IDir(FPIL_DIR) $(VERSION_INCLUDES)

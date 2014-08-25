@@ -33,7 +33,7 @@
 
       {@change entry@}
 
- *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.16 25-Sep-2013 17:44:11+10 tjf $
+ *  @(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.17 25-Aug-2014 14:38:03+10 tjf $
  */
 
 /*
@@ -41,7 +41,7 @@
  */
 
 
-static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.16 25-Sep-2013 17:44:11+10 tjf $";
+static char *rcsId="@(#) $Id: ACMM:2dFdelta/tdFdelSeq.c,v 3.17 25-Aug-2014 14:38:03+10 tjf $";
 static void *use_rcsId = (0 ? (void *)(&use_rcsId) : (void *) &rcsId);
 
 
@@ -390,6 +390,9 @@ TDFDELTA_PRIVATE int  tdFdelta___CheckFibresUnder (
 
       It is assumed that THE TARGET FIELD IS A VALID FIELD CONFIGURATION.
 
+      Returns the number (not index) of the offending fibre. Returns 0 if
+      we can move directly.
+
  *  History:
       01-Jul-1994  JW   Original version
       29-Oct-1996  KS   Call to tdFcollisionButFib() was mis-coded, passing
@@ -442,6 +445,8 @@ TDFDELTA_PRIVATE int  tdFdelta___CheckFibresUnder (
                          detection having enough clearance to account for
                          varying grasp offsets (the object fibres are about
                          500 microns, the guide fibres are closer to zero).
+      25-Aug-2014  TJF   If we are parking (can park can't collide) then clearly
+                          we can move directly to the park position, and should.
 
       {@change entry@}
  */
@@ -499,12 +504,20 @@ TDFDELTA_PRIVATE int  tdFdelta___DeltaDirectMove (
             return (0);
         }
     }
-   
+
+    /*
+     * We  are uncrossed! If moving to our park position, and
+     * park positions don't cross, then clearly we can move now.
+     */
+    if ((ParkMayCollide == 0)&&(tField->park[piv] == YES))
+    {
+        return 0;
+    }
 
     /*
      *  Calculate the offsets for this button for the target pos's.
      */
-#if 0
+#if 0  /* See change of 19-Jun-2007 above */
     cosT = cos(iField->theta[piv]);
     sinT = sin(iField->theta[piv]);
     graspXt = ((double)con->graspX[piv])*cosT -
