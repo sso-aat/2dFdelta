@@ -53,7 +53,7 @@
  *
  *  By default, both 6dF and 2dF are supported.
  */
-
+#define Version_2df_only
 /*
  * Default includes and libs for both 6dF and 2dF.
  */

@@ -124,12 +124,12 @@
 typedef struct tdFinterim {
       double    theta[FPIL_MAXPIVOTS]; /* Button handle orientation          */
       double    fibreLength[FPIL_MAXPIVOTS];/* Pivot-button distance         */
-      long int  fvpX[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - x ord. */
-      long int  fvpY[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - y ord. */
-      long int  xf[FPIL_MAXPIVOTS];    /* Fibre-end x coordinate             */
-      long int  yf[FPIL_MAXPIVOTS];    /* Fibre-end y coordinate             */
-      long int  xb[FPIL_MAXPIVOTS];    /* Button x coordinate                */
-      long int  yb[FPIL_MAXPIVOTS];    /* Button y coordinate                */
+      INT32  fvpX[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - x ord. */
+      INT32  fvpY[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - y ord. */
+      INT32  xf[FPIL_MAXPIVOTS];    /* Fibre-end x coordinate             */
+      INT32  yf[FPIL_MAXPIVOTS];    /* Fibre-end y coordinate             */
+      INT32  xb[FPIL_MAXPIVOTS];    /* Button x coordinate                */
+      INT32  yb[FPIL_MAXPIVOTS];    /* Button y coordinate                */
       short     park[FPIL_MAXPIVOTS];  /* Flag indicating button is parked   */
       short     nAbove[FPIL_MAXPIVOTS];/* Number of fibres crossing above    */
       short     nBelow[FPIL_MAXPIVOTS];/* Number of fibres crossing below    */
@@ -154,8 +154,8 @@ typedef struct tdFoffsets {
  *  Fidcuial locations.
  */
 typedef struct tdFfidcuials {
-      long int  fidX[FPIL_MAXFIDS];   /* Fiducial mark X ordinate (mic)     */
-      long int  fidY[FPIL_MAXFIDS];   /* Fiducial mark Y ordinate (mic)     */
+      INT32  fidX[FPIL_MAXFIDS];   /* Fiducial mark X ordinate (mic)     */
+      INT32  fidY[FPIL_MAXFIDS];   /* Fiducial mark Y ordinate (mic)     */
       short     inUse[FPIL_MAXFIDS];  /* Is the fiducial currently in use   */
       } tdFfiducials;
 
@@ -165,10 +165,10 @@ typedef struct tdFfidcuials {
 typedef struct tdFtarget {
       double    theta[FPIL_MAXPIVOTS]; /* Button handle orientation          */
       double    fibreLength[FPIL_MAXPIVOTS]; /* Pivot-button distance        */
-      long int  fvpX[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - x ord. */
-      long int  fvpY[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - y ord. */
-      long int  xf[FPIL_MAXPIVOTS];    /* Fibre-end x coordinate             */
-      long int  yf[FPIL_MAXPIVOTS];    /* Fibre-end y coordinate             */
+      INT32  fvpX[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - x ord. */
+      INT32  fvpY[FPIL_MAXPIVOTS];  /* Fibre virtual pivot point - y ord. */
+      INT32  xf[FPIL_MAXPIVOTS];    /* Fibre-end x coordinate             */
+      INT32  yf[FPIL_MAXPIVOTS];    /* Fibre-end y coordinate             */
       short     mustMove[FPIL_MAXPIVOTS];/* Flag indicating button must move */
       short     park[FPIL_MAXPIVOTS];  /* Flag indicating button is parked   */
       } tdFtarget;
@@ -178,14 +178,14 @@ typedef struct tdFtarget {
  */
 typedef struct tdFconstants {
       double    tPark[FPIL_MAXPIVOTS]; /* Park position - theta coordinate   */
-      long int  xPark[FPIL_MAXPIVOTS]; /*               - x coordinate       */
-      long int  yPark[FPIL_MAXPIVOTS]; /*               - y coordinate       */
-      long int  xPiv[FPIL_MAXPIVOTS];  /* Pivot location - x coordinate      */
-      long int  yPiv[FPIL_MAXPIVOTS];  /*                - y coordinate      */
+      INT32  xPark[FPIL_MAXPIVOTS]; /*               - x coordinate       */
+      INT32  yPark[FPIL_MAXPIVOTS]; /*               - y coordinate       */
+      INT32  xPiv[FPIL_MAXPIVOTS];  /* Pivot location - x coordinate      */
+      INT32  yPiv[FPIL_MAXPIVOTS];  /*                - y coordinate      */
       short     type[FPIL_MAXPIVOTS];  /* Type of pivot - GUIDE/OBJECT       */
       short     inUse[FPIL_MAXPIVOTS]; /* Flag indicating if pivot is broken */
-      long int  graspX[FPIL_MAXPIVOTS];/* Fibre-end location during...       */
-      long int  graspY[FPIL_MAXPIVOTS];/*                   ...button grasp  */
+      INT32  graspX[FPIL_MAXPIVOTS];/* Fibre-end location during...       */
+      INT32  graspY[FPIL_MAXPIVOTS];/*                   ...button grasp  */
       unsigned long maxExt[FPIL_MAXPIVOTS]; /* Maximum fibre extension */
       } tdFconstants;
 

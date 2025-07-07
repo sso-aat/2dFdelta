@@ -464,7 +464,7 @@ static void CheckForButFibCollisions(
                        firstPivot+1,otherPivot+1);
                 (*numErrors)++;
                 if (actionFlags & SHOW)
-		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %ld,%ld to %ld,%ld",
+		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %d,%d to %d,%d",
 			   firstPivot+1, 
  			   firstPivotX, firstPivotY, firstPivotTheta,
  			   otherPivot+1,
@@ -498,7 +498,7 @@ static void CheckForButFibCollisions(
                        otherPivot+1,firstPivot+1);
                 (*numErrors)++;
                 if (actionFlags & SHOW)
-		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %ld,%ld to %ld,%ld",
+		    MsgOut(status,"Button %d at %d,%d,%g with fibre %d from %d,%d to %d,%d",
 			   otherPivot+1,
                            otherPivotX, otherPivotY, otherPivotTheta,
 		           firstPivot+1,

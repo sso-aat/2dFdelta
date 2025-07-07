@@ -140,8 +140,8 @@ TDFDELTA_INTERNAL SdsIdType  tdFdeltaCFnew (
     /*
      *  Add x,y,theta for current field.
      */
-    SdsPut(xId,sizeof(long int)*dims,0,(void *)currDetails->xf,status);
-    SdsPut(yId,sizeof(long int)*dims,0,(void *)currDetails->yf,status);
+    SdsPut(xId,sizeof(INT32)*dims,0,(void *)currDetails->xf,status);
+    SdsPut(yId,sizeof(INT32)*dims,0,(void *)currDetails->yf,status);
     SdsPut(thetaId,sizeof(double)*dims,0,(void *)currDetails->theta,status);
 
     /*
