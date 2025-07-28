@@ -259,7 +259,7 @@ TDFDELTA_INTERNAL void  tdFdeltaCFaddMoves (
 {
     va_list    args;                     /* Argument pointer list */
     double     tarTheta;
-    long int   tarXf, tarYf;             /* Command parameters    */
+    INT32   tarXf, tarYf;             /* Command parameters    */
     int        piv;
     char       lineName[10],             /* Name for new entry    */
                cmdLine[CMDLINE_LENGTH],  /* Command line contents */
@@ -296,14 +296,14 @@ TDFDELTA_INTERNAL void  tdFdeltaCFaddMoves (
          *  Get MF args (must be in correct order).
          */
         piv      = va_arg(args, int);
-        tarXf    = va_arg(args, long int);
-        tarYf    = va_arg(args, long int);
+        tarXf    = va_arg(args, INT32);
+        tarYf    = va_arg(args, INT32);
         tarTheta = va_arg(args, double);
 
         /*
          *  Add new line to command file containing move details.
          */
-        if (ErsSPrintf(sizeof(cmdLine),cmdLine,"%s %d %ld %ld %f",
+        if (ErsSPrintf(sizeof(cmdLine),cmdLine,"%s %d %d %d %f",
                         cmd,piv,tarXf,tarYf,tarTheta) == EOF)
             *status = TDFDELTA__SPRINTF;
         else
