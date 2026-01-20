@@ -1,0 +1,8 @@
+*
+!*.*
+!*/
+*.o
+*.d
+*.a
+*akefile*
+tdFdelta_Err*
